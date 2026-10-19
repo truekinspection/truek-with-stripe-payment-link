@@ -34,7 +34,7 @@ export const pricing = [
   {
     id: "10201",
     plan: "Our Plan",
-    price: "$79",
+    price: "$69",
     features: [
       "1 Vehicle Report",
       "Vehicle Specification",
@@ -51,6 +51,6 @@ export const pricing = [
  * Report price shown on the site. The Stripe Payment Link amount is configured
  * in the Stripe Dashboard (keep them in sync).
  */
-export const REPORT_PRICE_DISPLAY = "$79";
-export const REPORT_PRICE_CENTS = 7900;
+export const REPORT_PRICE_DISPLAY = "$69";
+export const REPORT_PRICE_CENTS = 6900;
 export const REPORT_CURRENCY = "usd";

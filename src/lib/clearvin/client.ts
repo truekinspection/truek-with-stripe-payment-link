@@ -138,9 +138,11 @@ export async function clearVinReport(
     params.set("locale", options.locale.trim());
   }
 
+  // Prefer JSON for html so ClearVIN returns { result: { id, html_report } }.
+  // Accept: text/html alone yields raw HTML with no report id.
   const extraHeaders: Record<string, string> =
     options.format === "html"
-      ? { Accept: "text/html,application/json;q=0.9,*/*;q=0.8", "Content-Type": "text/html" }
+      ? { Accept: "application/json,text/html;q=0.8,*/*;q=0.5" }
       : { Accept: "application/pdf,application/json;q=0.9,*/*;q=0.8" };
 
   const res = await clearVinGet(`/report?${params.toString()}`, extraHeaders);

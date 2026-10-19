@@ -196,6 +196,33 @@ ${ctaButton(params.reportUrl, "View Vehicle Report")}
   });
 }
 
+/** Owner-only notification when a customer submits the Get Report form. */
+export function buildReportRequestOwnerEmailHtml(params: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  vin: string;
+}): string {
+  const fullName =
+    `${params.firstName.trim()} ${params.lastName.trim()}`.trim() || "—";
+  const rows = summaryTable([
+    { label: "Name", value: fullName },
+    { label: "Email", value: params.email.trim() || "—" },
+    { label: "VIN Number", value: params.vin.trim() || "—" },
+  ]);
+  const body = `
+<p style="margin:0 0 16px;">Hi,</p>
+<p style="margin:0 0 16px;">A customer submitted the <strong>Get Report</strong> form on TrueK Inspection. Details below.</p>
+${rows}
+<p style="margin:20px 0 0;font-size:14px;color:${MUTED};">They will verify the VIN next and may continue to payment.</p>
+`;
+  return emailShell({
+    title: "New report request (team copy)",
+    preheader: `New Get Report request — ${params.vin.trim() || "VIN"}`,
+    bodyHtml: body,
+  });
+}
+
 export function buildContactConfirmationEmailHtml(params: {
   firstName: string;
   lastName: string;

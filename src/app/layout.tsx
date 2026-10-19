@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TrueK Inspection",
   description:
-    "Get a Certified Vehicle History Report for just $79. Get your report now. Original and Actual Vehicle History Reports. Guaranteed Safe Checkout.",
+    "Get a Certified Vehicle History Report for just $69. Get your report now. Original and Actual Vehicle History Reports. Guaranteed Safe Checkout.",
   verification: {
     google: "TBbs3ucxUopm3Q_jtWwm5llzVUZtSovZxUftwF8wMC8",
   },
@@ -68,7 +68,7 @@ const jsonLd = {
       image: "https://www.truekinspection.com/logo.png",
       url: "https://www.truekinspection.com/",
       email: "contact@truekinspection.com",
-      priceRange: "$79",
+      priceRange: "$69",
       areaServed: {
         "@type": "Country",
         name: "United States",
@@ -94,7 +94,7 @@ const jsonLd = {
       offers: {
         "@type": "Offer",
         url: "https://www.truekinspection.com/#pricing",
-        price: "79.00",
+        price: "69.00",
         priceCurrency: "USD",
         availability: "https://schema.org/InStock",
         description:
@@ -119,7 +119,7 @@ const jsonLd = {
       about: { "@id": "https://www.truekinspection.com/#organization" },
       primaryImageOfPage: "https://www.truekinspection.com/logo.png",
       description:
-        "Get a certified vehicle history report for $79, covering DMV title history, safety recalls, and accident information.",
+        "Get a certified vehicle history report for $69, covering DMV title history, safety recalls, and accident information.",
     },
     {
       "@type": "BreadcrumbList",
@@ -175,7 +175,7 @@ export default function RootLayout({
                 var s0 = document.getElementsByTagName("script")[0];
 
                 s1.async = true;
-                s1.src = "https://embed.tawk.to/6ac3e7d5791aba34cbeed7fb/1k46k36tu";
+                s1.src = "https://embed.tawk.to/6ac3e7d5691aba34cbeed7fb/1k46k36tu";
                 s1.charset = "UTF-8";
                 s1.setAttribute("crossorigin", "*");
 

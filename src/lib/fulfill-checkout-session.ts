@@ -224,6 +224,8 @@ export async function fulfillCheckoutSession(
     };
   }
 
+  // Sequence: payment verified → ClearVIN fetched → DB saved → emails → redirect.
+  // Emails run only after the report is persisted; redirect waits until sends finish.
   const origin = appOrigin();
   const reportUrl = `${origin}/report-preview?token=${encodeURIComponent(token)}&vin=${encodeURIComponent(vin)}`;
   const resend = createResendClient();
@@ -231,7 +233,11 @@ export async function fulfillCheckoutSession(
   const customerLabel =
     [firstName, lastName].filter(Boolean).join(" ").trim() || "Customer";
 
-  if (resend) {
+  if (!resend) {
+    console.warn(
+      "[fulfillCheckoutSession] RESEND_API_KEY not set; skipping emails.",
+    );
+  } else {
     const emailHtml = buildReportDeliveryEmailHtml({
       customerName: customerLabel,
       reportUrl,
@@ -242,17 +248,27 @@ export async function fulfillCheckoutSession(
     });
 
     try {
-      await resend.emails.send({
+      const customerResult = await resend.emails.send({
         from,
         to: email,
         subject: "Your vehicle history report — TrueK Inspection",
         html: emailHtml,
       });
+      if (customerResult.error) {
+        console.error(
+          "[fulfillCheckoutSession] customer report email rejected",
+          customerResult.error,
+        );
+      } else {
+        console.info(
+          `[fulfillCheckoutSession] customer report email sent to ${email}`,
+        );
+      }
     } catch (e) {
       console.error("[fulfillCheckoutSession] customer report email", e);
     }
 
-    await sendOwnerCopy(resend, {
+    const ownerSent = await sendOwnerCopy(resend, {
       customerEmail: email,
       subject: `[TrueK] Purchase complete — ${vin}`,
       html: buildReportDeliveryEmailHtml({
@@ -266,10 +282,9 @@ export async function fulfillCheckoutSession(
       }),
       logContext: "fulfillCheckoutSession",
     });
-  } else {
-    console.warn(
-      "[fulfillCheckoutSession] RESEND_API_KEY not set; skipping emails.",
-    );
+    if (!ownerSent) {
+      console.error("[fulfillCheckoutSession] owner report email did not send");
+    }
   }
 
   void db.reportPreviewToken

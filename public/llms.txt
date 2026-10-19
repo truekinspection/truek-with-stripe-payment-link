@@ -1,6 +1,6 @@
 # TrueK Inspection
 
-> TrueK Inspection sells certified vehicle history reports for used-car buyers in the United States. A single report costs $79 and is compiled from licensed data supplied by ClearVin and Black Book.
+> TrueK Inspection sells certified vehicle history reports for used-car buyers in the United States. A single report costs $69 and is compiled from licensed data supplied by ClearVin and Black Book.
 
 TrueK Inspection is a fully online service — there is no physical office or showroom. Customers submit a 17-character VIN through the website and receive a digital report. The company's legal registered name is TrueK Inspection.
 
@@ -16,7 +16,7 @@ TrueK Inspection is a fully online service — there is no physical office or sh
 ## Services
 
 - [Request a Vehicle History Report](https://www.truekinspection.com/#report): Enter a VIN to generate a report.
-- [Pricing](https://www.truekinspection.com/pricing): Flat $79 per report, one VIN per purchase.
+- [Pricing](https://www.truekinspection.com/pricing): Flat $69 per report, one VIN per purchase.
 - [Sample Report](https://www.truekinspection.com/sample): A completed example report to preview before buying.
 
 ## Company

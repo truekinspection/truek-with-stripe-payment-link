@@ -4,14 +4,15 @@
 export function extractHtmlFromReportJson(parsed: unknown): string | undefined {
   if (!parsed || typeof parsed !== "object") return undefined;
   const root = parsed as Record<string, unknown>;
-  const candidates = [root.html, root.reportHtml, root.body];
+  const candidates = [root.html, root.html_report, root.reportHtml, root.body];
   for (const c of candidates) {
     if (typeof c === "string" && c.includes("<")) return c;
   }
   const result = root.result;
   if (result && typeof result === "object") {
     const rec = result as Record<string, unknown>;
-    const inner = [rec.html, rec.reportHtml, rec.body];
+    // ClearVIN vendor API returns HTML under result.html_report
+    const inner = [rec.html_report, rec.html, rec.reportHtml, rec.body];
     for (const c of inner) {
       if (typeof c === "string" && c.includes("<")) return c;
     }
@@ -46,6 +47,12 @@ export function extractReportIdFromClearVinPayload(
     /"(?:reportId|report_id)"\s*:\s*"([^"\\]{4,64})"/i,
   );
   if (quoted?.[1]) return quoted[1].trim();
+
+  // ClearVIN JSON envelope: "result":{"id":"A3207F1A",...}
+  const resultId = head.match(
+    /"result"\s*:\s*\{[^{}]{0,200}?"id"\s*:\s*"([A-F0-9]{6,32})"/i,
+  );
+  if (resultId?.[1]) return resultId[1].trim();
 
   const meta = head.match(
     /(?:report|data)[-_]?id\s*[=:]\s*["']?([A-F0-9]{6,32})["']?/i,
