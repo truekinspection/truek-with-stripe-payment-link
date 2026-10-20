@@ -128,7 +128,9 @@ export async function fulfillCheckoutSession(
   const name = session.customer_details?.name?.trim() || "";
   const email = session.customer_details?.email?.trim() || "";
   const vin = extractVinFromSession(session);
-  const transactionId = extractPaymentIntentId(session.payment_intent);
+  // $0 checkouts (e.g. 100% promo) are paid but have no PaymentIntent — use session.id.
+  const paymentIntentId = extractPaymentIntentId(session.payment_intent);
+  const transactionId = paymentIntentId || session.id;
   const amountCents = session.amount_total;
 
   if (!name || !email || !vin || !transactionId || amountCents == null) {
