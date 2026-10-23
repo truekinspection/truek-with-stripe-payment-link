@@ -1,12 +1,16 @@
 // Whop API helpers (server-only). Uses the company Account API key
-// (WHOP_API_KEY) against the Whop REST API v2.
+// (WHOP_API_KEY) against the Whop REST API.
 //
-// NOTE: Whop API keys have per-endpoint permissions that must be enabled in
-// Whop Dashboard -> Developer for the key: `create_checkout_session` and
-// `retrieve_payment`. Until those are on, session creation / payment reads
-// return 401 and callers fall back gracefully.
+// Reads (payments) live on v2; checkout creation lives on v1
+// (`POST /api/v1/checkout_configurations`). The key needs these permissions
+// (Whop Dashboard -> Developer): checkout_configuration:create,
+// checkout_configuration:basic:read, plan:create, plan:basic:read,
+// access_pass:create, access_pass:update, payment:basic:read,
+// member:basic:read, member:email:read, webhook_receive:payments,
+// developer:manage_webhook. Company id comes from WHOP_COMPANY_ID.
 
 const WHOP_API_BASE = "https://api.whop.com/api/v2";
+const WHOP_API_V1 = "https://api.whop.com/api/v1";
 
 export function getWhopPlanId(): string | null {
   const explicit = process.env.WHOP_PLAN_ID?.trim();
@@ -47,14 +51,15 @@ export async function createWhopCheckoutSession(params: {
 }): Promise<WhopCheckoutSession | null> {
   const apiKey = process.env.WHOP_API_KEY?.trim();
   const planId = getWhopPlanId();
-  if (!apiKey || !planId) return null;
+  const companyId = process.env.WHOP_COMPANY_ID?.trim();
+  if (!apiKey || !planId || !companyId) return null;
 
   const metadata: Record<string, string> = { vin: params.vin };
   if (params.email) metadata.email = params.email;
   if (params.name) metadata.name = params.name;
 
   try {
-    const res = await fetch(`${WHOP_API_BASE}/checkout-sessions`, {
+    const res = await fetch(`${WHOP_API_V1}/checkout_configurations`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -63,6 +68,8 @@ export async function createWhopCheckoutSession(params: {
       },
       body: JSON.stringify({
         plan_id: planId,
+        account_id: companyId,
+        mode: "payment",
         metadata,
         redirect_url: `${appOrigin()}/whop/return`,
       }),
