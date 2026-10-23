@@ -44,8 +44,12 @@ function readVinFromClient(): string {
   );
 }
 
+// Payment method: Whop checkout (local swap, Oct 23, 2026 — not live).
+// Stripe (old) — commented out, restore these two lines to go back:
+// const PAYMENT_LINK =
+//   process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
 const PAYMENT_LINK =
-  process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
+  process.env.NEXT_PUBLIC_WHOP_CHECKOUT_URL?.trim() || "";
 
 export default function CheckVinPage() {
   const router = useRouter();
