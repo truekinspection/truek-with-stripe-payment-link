@@ -10,15 +10,24 @@ import { FooterSection } from "@/components/footer";
 
 /**
  * Landing page after Whop checkout (redirect_url target).
- * Whop appends `payment` (pay_ id) and `status` (succeeded/failed/canceled).
- * Fulfillment itself runs from the payment.succeeded webhook — this page
- * only waits for the report token and forwards the buyer to it, exactly
- * like the Stripe flow landed on /report-preview after payment.
+ * Whop appends the payment id (as `payment`, `payment_id` or
+ * `receipt_id`) and a `status`. On landing, the page asks the server to
+ * verify + fulfill the payment (/api/whop/confirm, Stripe-flow style) and
+ * then polls for the report token, forwarding the buyer to /report-preview
+ * — exactly like the Stripe flow. The payment.succeeded webhook covers
+ * buyers who never return.
  */
 function WhopReturnInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const paymentId = searchParams.get("payment") || "";
+  // Whop has used different names for the payment id on the return
+  // redirect over time (`payment`, `payment_id`, `receipt_id`) — accept
+  // any of them so the page can always find the buyer's payment.
+  const paymentId =
+    searchParams.get("payment") ||
+    searchParams.get("payment_id") ||
+    searchParams.get("receipt_id") ||
+    "";
   const status = (searchParams.get("status") || "").toLowerCase();
 
   const [state, setState] = useState<"waiting" | "failed" | "timeout">(
