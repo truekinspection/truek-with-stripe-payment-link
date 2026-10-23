@@ -34,6 +34,13 @@ function WhopReturnInner() {
       setState("timeout");
       return;
     }
+    // Stripe-flow style: ask the server to verify + fulfill this payment
+    // right now, then poll for the report token below.
+    void fetch("/api/whop/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentId }),
+    }).catch(() => {});
     const timer = setInterval(async () => {
       tries.current += 1;
       try {
