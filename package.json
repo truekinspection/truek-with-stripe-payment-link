@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
-    "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
@@ -30,7 +30,7 @@
     "next": "^15.6.0-canary.58",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.3",
-    "pg": "^8.13.1",
+    "pg": "^8.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
@@ -52,7 +52,7 @@
     "autoprefixer": "10.4.17",
     "baseline-browser-mapping": "^2.9.19",
     "postcss": "8.4.35",
-    "prisma": "^7.3.0",
+    "prisma": "^7.10.1",
     "tailwindcss": "3.4.1",
     "tw-animate-css": "^1.3.0",
     "typescript": "^5"
