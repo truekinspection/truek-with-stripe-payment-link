@@ -132,8 +132,10 @@ export function buildReportDeliveryEmailHtml(params: {
   vin: string;
   /** ClearVIN report id for this order (when returned by the vendor). */
   reportId?: string | null;
-  /** Stripe PaymentIntent id (or other payment transaction id). */
+  /** Payment transaction id (Stripe PaymentIntent, Whop payment, ...). */
   transactionId?: string | null;
+  /** Row label for the transaction id — set per gateway ("Whop Payment ID"). */
+  transactionLabel?: string;
   customerEmail?: string;
   vehicleYear?: string;
   vehicleMake?: string;
@@ -166,7 +168,10 @@ export function buildReportDeliveryEmailHtml(params: {
     ...(vehicleBits
       ? [{ label: "Year / Make / Model", value: vehicleBits }]
       : []),
-    { label: "Stripe Payment Intent ID", value: transactionDisplay },
+    {
+      label: params.transactionLabel?.trim() || "Payment ID",
+      value: transactionDisplay,
+    },
     { label: "ClearVIN Report ID", value: reportIdDisplay },
     { label: "Link valid for", value: linkValidityCopy },
   ];

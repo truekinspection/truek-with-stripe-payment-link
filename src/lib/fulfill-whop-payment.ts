@@ -231,6 +231,7 @@ export async function fulfillWhopPayment(params: {
       vin,
       reportId: reportIdStr,
       transactionId: paymentId,
+      transactionLabel: "Whop Payment ID",
       customerEmail: email,
     });
 
@@ -262,6 +263,7 @@ export async function fulfillWhopPayment(params: {
         vin,
         reportId: reportIdStr,
         transactionId: paymentId,
+      transactionLabel: "Whop Payment ID",
         customerEmail: email,
         forOwner: true,
       }),
