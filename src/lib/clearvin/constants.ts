@@ -43,7 +43,10 @@ export type ClearVinRuntimeEnv = "test" | "production";
  * - otherwise: production NODE_ENV → production; everything else → test
  */
 export function getClearVinRuntimeEnv(): ClearVinRuntimeEnv {
-  const explicit = process.env.CLEARVIN_ENV?.trim().toLowerCase();
+  const explicit = (
+    process.env.NEXT_PUBLIC_CLEARVIN_ENV ||
+    process.env.CLEARVIN_ENV
+  )?.trim().toLowerCase();
   if (explicit === "test" || explicit === "staging") return "test";
   if (explicit === "production" || explicit === "prod") return "production";
   return process.env.NODE_ENV === "production" ? "production" : "test";
