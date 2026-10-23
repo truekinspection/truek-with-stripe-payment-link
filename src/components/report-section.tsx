@@ -62,6 +62,7 @@ export const InspectionReportForm = () => {
 
     localStorage.setItem("temp_vin", vinNorm);
     localStorage.setItem("temp_name", `${values.firstName} ${values.lastName}`);
+    localStorage.setItem("temp_email", values.email);
 
     try {
       const response = await handleReportRequest({

@@ -85,21 +85,6 @@ async function fulfillWhopPayment(
     return { ok: true };
   }
 
-  // Extract VIN from checkout metadata
-  const rawVin = data.metadata?.vin?.trim() ?? "";
-  if (!rawVin) {
-    console.error(
-      `[whop-webhook] payment ${paymentId} has no vin in metadata`,
-    );
-    return { ok: false, reason: "missing_vin" };
-  }
-  const vin = normalizeVin(rawVin);
-  const vinError = getVinValidationError(vin);
-  if (vinError) {
-    console.error(`[whop-webhook] invalid vin "${vin}": ${vinError}`);
-    return { ok: false, reason: "invalid_vin" };
-  }
-
   // Extract customer info from Whop user object
   const rawName =
     data.user?.name?.trim() ||
@@ -111,6 +96,30 @@ async function fulfillWhopPayment(
       `[whop-webhook] payment ${paymentId} has no customer email`,
     );
     return { ok: false, reason: "missing_email" };
+  }
+
+  // Extract VIN from checkout metadata, with fallback lookup from db.report by customer email
+  let rawVin = data.metadata?.vin?.trim() ?? "";
+  if (!rawVin) {
+    const latestReport = await db.report.findFirst({
+      where: { email },
+      orderBy: { createdAt: "desc" },
+      select: { vinNumber: true },
+    });
+    rawVin = latestReport?.vinNumber?.trim() ?? "";
+  }
+
+  if (!rawVin) {
+    console.error(
+      `[whop-webhook] payment ${paymentId} has no vin in metadata or database`,
+    );
+    return { ok: false, reason: "missing_vin" };
+  }
+  const vin = normalizeVin(rawVin);
+  const vinError = getVinValidationError(vin);
+  if (vinError) {
+    console.error(`[whop-webhook] invalid vin "${vin}": ${vinError}`);
+    return { ok: false, reason: "invalid_vin" };
   }
 
   // Amount — Whop may send cents or dollars depending on API version

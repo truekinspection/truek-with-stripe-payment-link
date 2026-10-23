@@ -30,6 +30,7 @@ export type WhopCheckoutResult =
 export async function createWhopCheckout(
   vin: string,
   redirectUrl: string,
+  email?: string,
 ): Promise<WhopCheckoutResult> {
   const planId = process.env.WHOP_PLAN_ID?.trim();
   if (!planId) {
@@ -39,9 +40,18 @@ export async function createWhopCheckout(
   const base = getWhopApiBase();
   const key = getWhopApiKey();
 
-  let res: Response;
+  // Helper to build a direct checkout URL as a fallback if API endpoint returns 403 or non-2xx
+  const buildDirectUrl = () => {
+    const isSandbox = base.includes("sandbox");
+    const domain = isSandbox ? "https://sandbox.whop.com" : "https://whop.com";
+    const u = new URL(`${domain}/checkout/${planId}`);
+    if (redirectUrl) u.searchParams.set("redirect_url", redirectUrl);
+    if (email) u.searchParams.set("email", email);
+    return u.toString();
+  };
+
   try {
-    res = await fetch(`${base}/checkout_configurations`, {
+    const res = await fetch(`${base}/checkout_configurations`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
@@ -54,34 +64,22 @@ export async function createWhopCheckout(
         redirect_url: redirectUrl,
       }),
     });
+
+    if (res.ok) {
+      const data = (await res.json().catch(() => null)) as {
+        id?: string;
+        checkout_url?: string;
+        url?: string;
+      } | null;
+      const checkoutUrl = data?.checkout_url ?? data?.url;
+      if (checkoutUrl) {
+        return { ok: true, checkoutUrl, id: data?.id ?? planId };
+      }
+    }
   } catch (e) {
-    console.error("[whop-client] fetch error:", e);
-    return { ok: false, message: "Could not reach Whop API." };
+    console.warn("[whop-client] checkout configuration API call failed, falling back to direct URL:", e);
   }
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error("[whop-client] non-2xx response:", res.status, text);
-    return {
-      ok: false,
-      message: `Whop API error ${res.status}: ${text.slice(0, 200)}`,
-    };
-  }
-
-  let data: { id?: string; checkout_url?: string; url?: string };
-  try {
-    data = (await res.json()) as typeof data;
-  } catch {
-    return { ok: false, message: "Whop API returned invalid JSON." };
-  }
-
-  const checkoutUrl = data.checkout_url ?? data.url ?? "";
-  const id = data.id ?? "";
-
-  if (!checkoutUrl) {
-    console.error("[whop-client] no checkout_url in response:", data);
-    return { ok: false, message: "Whop did not return a checkout URL." };
-  }
-
-  return { ok: true, checkoutUrl, id };
+  // Graceful fallback to direct Whop plan checkout
+  return { ok: true, checkoutUrl: buildDirectUrl(), id: planId };
 }

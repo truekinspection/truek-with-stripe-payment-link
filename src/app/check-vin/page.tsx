@@ -18,10 +18,9 @@ import { getVinValidationError, normalizeVin } from "@/lib/vin-validation";
 import { REPORT_PRICE_DISPLAY } from "@/lib/constants";
 import { useUserStore } from "@/store/user-store";
 
-// Payment provider switch — controlled entirely by env var.
-// Default is "stripe" so production behaves exactly as before.
+// Active payment provider: Whop (default)
 const PAYMENT_PROVIDER =
-  process.env.NEXT_PUBLIC_PAYMENT_PROVIDER?.trim() || "stripe";
+  process.env.NEXT_PUBLIC_PAYMENT_PROVIDER?.trim() || "whop";
 const IS_WHOP = PAYMENT_PROVIDER === "whop";
 
 type ReportLoadState = "loading" | "ready" | "error";
@@ -50,10 +49,9 @@ function readVinFromClient(): string {
   );
 }
 
-// Stripe payment link (used only when PAYMENT_PROVIDER=stripe, which is the default)
-const PAYMENT_LINK = IS_WHOP
-  ? ""
-  : process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
+// Stripe payment link commented out as requested — Whop is now the active payment provider
+// const PAYMENT_LINK =
+//   process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
 
 export default function CheckVinPage() {
   const router = useRouter();
@@ -301,50 +299,54 @@ export default function CheckVinPage() {
                 <p className="text-sm text-red-600 text-center">{whopError}</p>
               )}
 
-              {/* ── Whop checkout button (PAYMENT_PROVIDER=whop) ────────── */}
-              {IS_WHOP ? (
-                <Button
-                  size="lg"
-                  disabled={whopLoading}
-                  className="w-full max-w-md bg-custom_red/80 hover:bg-custom_red/100 text-white text-lg py-6 rounded-xl shadow-lg"
-                  onClick={async () => {
-                    setWhopLoading(true);
-                    setWhopError("");
-                    try {
-                      const res = await fetch("/api/whop/checkout", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ vin: activeVin }),
-                      });
-                      const json = (await res.json()) as {
-                        checkoutUrl?: string;
-                        error?: string;
-                      };
-                      if (!res.ok || !json.checkoutUrl) {
-                        setWhopError(
-                          json.error ?? "Could not create checkout. Please try again.",
-                        );
-                        return;
-                      }
-                      window.location.href = json.checkoutUrl;
-                    } catch {
-                      setWhopError("Network error. Please try again.");
-                    } finally {
-                      setWhopLoading(false);
+              {/* ── Whop checkout button (active payment method) ────────── */}
+              <Button
+                size="lg"
+                disabled={whopLoading}
+                className="w-full max-w-md bg-custom_red/80 hover:bg-custom_red/100 text-white text-lg py-6 rounded-xl shadow-lg"
+                onClick={async () => {
+                  setWhopLoading(true);
+                  setWhopError("");
+                  try {
+                    const email =
+                      localStorage.getItem("temp_email")?.trim() ||
+                      useUserStore.getState().email?.trim() ||
+                      "";
+                    const res = await fetch("/api/whop/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ vin: activeVin, email }),
+                    });
+                    const json = (await res.json()) as {
+                      checkoutUrl?: string;
+                      error?: string;
+                    };
+                    if (!res.ok || !json.checkoutUrl) {
+                      setWhopError(
+                        json.error ?? "Could not create checkout. Please try again.",
+                      );
+                      return;
                     }
-                  }}
-                >
-                  {whopLoading ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Preparing checkout…
-                    </span>
-                  ) : (
-                    `Get Full Report for ${REPORT_PRICE_DISPLAY}`
-                  )}
-                </Button>
-              ) : PAYMENT_LINK ? (
-                /* ── Stripe checkout button (default) ────────────────────── */
+                    window.location.href = json.checkoutUrl;
+                  } catch {
+                    setWhopError("Network error. Please try again.");
+                  } finally {
+                    setWhopLoading(false);
+                  }
+                }}
+              >
+                {whopLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Preparing checkout…
+                  </span>
+                ) : (
+                  `Get Full Report for ${REPORT_PRICE_DISPLAY}`
+                )}
+              </Button>
+
+              {/* ── Stripe checkout button (commented out) ──────────────────
+              {PAYMENT_LINK ? (
                 <Button
                   asChild
                   size="lg"
@@ -354,15 +356,8 @@ export default function CheckVinPage() {
                     Get Full Report for {REPORT_PRICE_DISPLAY}
                   </a>
                 </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  disabled
-                  className="w-full max-w-md bg-custom_red/80 text-white text-lg py-6 rounded-xl shadow-lg opacity-60"
-                >
-                  Get Full Report for {REPORT_PRICE_DISPLAY}
-                </Button>
-              )}
+              ) : null}
+              ───────────────────────────────────────────────────────────── */}
               <p className="max-w-md text-center text-xs text-gray-500">
                 NMVTIS-related records in this report are provided through
                 licensed data providers, including ClearVin.{" "}
