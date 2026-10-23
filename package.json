@@ -20,6 +20,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@types/pg": "^8.20.0",
+    "@whop/sdk": "^2.6.0",
     "add": "^2.0.6",
     "axios": "^1.9.0",
     "bun": "^1.2.14",

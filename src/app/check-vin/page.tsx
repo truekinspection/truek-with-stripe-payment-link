@@ -18,6 +18,12 @@ import { getVinValidationError, normalizeVin } from "@/lib/vin-validation";
 import { REPORT_PRICE_DISPLAY } from "@/lib/constants";
 import { useUserStore } from "@/store/user-store";
 
+// Payment provider switch — controlled entirely by env var.
+// Default is "stripe" so production behaves exactly as before.
+const PAYMENT_PROVIDER =
+  process.env.NEXT_PUBLIC_PAYMENT_PROVIDER?.trim() || "stripe";
+const IS_WHOP = PAYMENT_PROVIDER === "whop";
+
 type ReportLoadState = "loading" | "ready" | "error";
 
 type VehicleSummary = {
@@ -44,8 +50,10 @@ function readVinFromClient(): string {
   );
 }
 
-const PAYMENT_LINK =
-  process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
+// Stripe payment link (used only when PAYMENT_PROVIDER=stripe, which is the default)
+const PAYMENT_LINK = IS_WHOP
+  ? ""
+  : process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
 
 export default function CheckVinPage() {
   const router = useRouter();
@@ -55,6 +63,9 @@ export default function CheckVinPage() {
   const [reportError, setReportError] = useState("");
   const [activeVin, setActiveVin] = useState("");
   const [vehicle, setVehicle] = useState<VehicleSummary | null>(null);
+  // Whop-specific state
+  const [whopLoading, setWhopLoading] = useState(false);
+  const [whopError, setWhopError] = useState("");
 
   // ── Verify VIN with ClearVIN (no report HTML on this page) ────────────────
   useEffect(() => {
@@ -286,7 +297,54 @@ export default function CheckVinPage() {
             </div>
 
             <div className="flex flex-col items-center gap-4 py-2">
-              {PAYMENT_LINK ? (
+              {whopError && (
+                <p className="text-sm text-red-600 text-center">{whopError}</p>
+              )}
+
+              {/* ── Whop checkout button (PAYMENT_PROVIDER=whop) ────────── */}
+              {IS_WHOP ? (
+                <Button
+                  size="lg"
+                  disabled={whopLoading}
+                  className="w-full max-w-md bg-custom_red/80 hover:bg-custom_red/100 text-white text-lg py-6 rounded-xl shadow-lg"
+                  onClick={async () => {
+                    setWhopLoading(true);
+                    setWhopError("");
+                    try {
+                      const res = await fetch("/api/whop/checkout", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ vin: activeVin }),
+                      });
+                      const json = (await res.json()) as {
+                        checkoutUrl?: string;
+                        error?: string;
+                      };
+                      if (!res.ok || !json.checkoutUrl) {
+                        setWhopError(
+                          json.error ?? "Could not create checkout. Please try again.",
+                        );
+                        return;
+                      }
+                      window.location.href = json.checkoutUrl;
+                    } catch {
+                      setWhopError("Network error. Please try again.");
+                    } finally {
+                      setWhopLoading(false);
+                    }
+                  }}
+                >
+                  {whopLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Preparing checkout…
+                    </span>
+                  ) : (
+                    `Get Full Report for ${REPORT_PRICE_DISPLAY}`
+                  )}
+                </Button>
+              ) : PAYMENT_LINK ? (
+                /* ── Stripe checkout button (default) ────────────────────── */
                 <Button
                   asChild
                   size="lg"
