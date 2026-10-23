@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -15,7 +15,7 @@ import { FooterSection } from "@/components/footer";
  * only waits for the report token and forwards the buyer to it, exactly
  * like the Stripe flow landed on /report-preview after payment.
  */
-export default function WhopReturnPage() {
+function WhopReturnInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("payment") || "";
@@ -64,8 +64,6 @@ export default function WhopReturnPage() {
   }, [paymentId, router, state]);
 
   return (
-    <main className="min-h-screen bg-white">
-      <Navbar />
       <section className="mx-auto max-w-2xl px-4 py-24 text-center">
         {state === "waiting" && (
           <>
@@ -120,6 +118,22 @@ export default function WhopReturnPage() {
           </>
         )}
       </section>
+  );
+}
+
+export default function WhopReturnPage() {
+  return (
+    <main className="min-h-screen bg-white">
+      <Navbar />
+      <Suspense
+        fallback={
+          <section className="mx-auto max-w-2xl px-4 py-24 text-center">
+            <Loader2 className="mx-auto h-12 w-12 animate-spin text-custom_red" />
+          </section>
+        }
+      >
+        <WhopReturnInner />
+      </Suspense>
       <FooterSection />
     </main>
   );
