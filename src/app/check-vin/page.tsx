@@ -44,7 +44,9 @@ function readVinFromClient(): string {
   );
 }
 
-// Payment method: Whop checkout (local swap, Oct 23, 2026 — not live).
+// Payment method: Whop (Oct 23, 2026). The button starts a Whop checkout
+// session via /api/whop/checkout so the VIN travels as payment metadata and
+// the webhook can fulfill the report — the Whop mirror of the Stripe flow.
 // Stripe (old) — commented out, restore these two lines to go back:
 // const PAYMENT_LINK =
 //   process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() || "";
@@ -54,6 +56,31 @@ const PAYMENT_LINK =
 export default function CheckVinPage() {
   const router = useRouter();
   const vinFromStore = useUserStore((s) => s.vnNumber);
+
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+
+  async function startWhopCheckout() {
+    if (!activeVin || checkoutBusy) return;
+    setCheckoutBusy(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch("/api/whop/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vin: activeVin }),
+      });
+      const data = (await res.json()) as { url?: string; message?: string };
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setCheckoutError(data.message || "Checkout could not be started. Please try again.");
+    } catch {
+      setCheckoutError("Checkout could not be started. Please try again.");
+    }
+    setCheckoutBusy(false);
+  }
 
   const [reportState, setReportState] = useState<ReportLoadState>("loading");
   const [reportError, setReportError] = useState("");
@@ -292,13 +319,19 @@ export default function CheckVinPage() {
             <div className="flex flex-col items-center gap-4 py-2">
               {PAYMENT_LINK ? (
                 <Button
-                  asChild
                   size="lg"
+                  onClick={startWhopCheckout}
+                  disabled={checkoutBusy}
                   className="w-full max-w-md bg-custom_red/80 hover:bg-custom_red/100 text-white text-lg py-6 rounded-xl shadow-lg"
                 >
-                  <a href={PAYMENT_LINK}>
-                    Get Full Report for {REPORT_PRICE_DISPLAY}
-                  </a>
+                  {checkoutBusy ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Starting secure checkout…
+                    </>
+                  ) : (
+                    <>Get Full Report for {REPORT_PRICE_DISPLAY}</>
+                  )}
                 </Button>
               ) : (
                 <Button
@@ -309,8 +342,13 @@ export default function CheckVinPage() {
                   Get Full Report for {REPORT_PRICE_DISPLAY}
                 </Button>
               )}
+              {checkoutError && (
+                <p className="max-w-md text-center text-sm text-red-600">
+                  {checkoutError}
+                </p>
+              )}
               <p className="max-w-md text-center text-xs text-gray-500">
-                NMVTIS-related records in this report are provided through
+                NMVTIS-related records in this report are provided through{" "}
                 licensed data providers, including ClearVin.{" "}
                 <Link href="/terms#nmvtis-disclaimer" className="underline">
                   Read full terms
