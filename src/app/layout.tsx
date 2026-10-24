@@ -175,7 +175,7 @@ export default function RootLayout({
                 var s0 = document.getElementsByTagName("script")[0];
 
                 s1.async = true;
-                s1.src = "https://embed.tawk.to/6ac3e7d5691aba34cbeed7fb/1k46k36tu";
+                s1.src = "https://embed.tawk.to/6ad8432a7852d834ae409578/1k5eccnqm";
                 s1.charset = "UTF-8";
                 s1.setAttribute("crossorigin", "*");
 
