@@ -246,7 +246,6 @@ export async function fulfillCheckoutSession(
       vin,
       reportId: reportIdStr,
       transactionId,
-      transactionLabel: "Stripe Payment Intent ID",
       customerEmail: email,
     });
 
@@ -280,7 +279,6 @@ export async function fulfillCheckoutSession(
         vin,
         reportId: reportIdStr,
         transactionId,
-        transactionLabel: "Stripe Payment Intent ID",
         customerEmail: email,
         forOwner: true,
       }),
